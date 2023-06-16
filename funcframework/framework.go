@@ -110,6 +110,17 @@ func Start(port string) error {
 
 func initServer() (*http.ServeMux, error) {
 	server := http.NewServeMux()
+	err := RegisterHandlers(server)
+	if err != nil {
+		return nil, err
+	}
+	return server, nil
+}
+
+// RegisterHandlers registers AllFunctions
+func RegisterHandlers(server interface {
+	Handle(pattern string, handler http.Handler)
+}) error {
 
 	// If FUNCTION_TARGET is set, only serve this target function at path "/".
 	// If not set, serve all functions at the registered paths.
@@ -124,26 +135,26 @@ func initServer() (*http.ServeMux, error) {
 			// should be served at '/'.
 			targetFn = lastFnWithoutName
 		} else {
-			return nil, fmt.Errorf("no matching function found with name: %q", target)
+			return fmt.Errorf("no matching function found with name: %q", target)
 		}
 
 		h, err := wrapFunction(targetFn)
 		if err != nil {
-			return nil, fmt.Errorf("failed to serve function %q: %v", target, err)
+			return fmt.Errorf("failed to serve function %q: %v", target, err)
 		}
 		server.Handle("/", h)
-		return server, nil
+		return nil
 	}
 
 	fns := registry.Default().GetAllFunctions()
 	for _, fn := range fns {
 		h, err := wrapFunction(fn)
 		if err != nil {
-			return nil, fmt.Errorf("failed to serve function at path %q: %v", fn.Path, err)
+			return fmt.Errorf("failed to serve function at path %q: %v", fn.Path, err)
 		}
 		server.Handle(fn.Path, h)
 	}
-	return server, nil
+	return nil
 }
 
 func wrapFunction(fn *registry.RegisteredFunction) (http.Handler, error) {
