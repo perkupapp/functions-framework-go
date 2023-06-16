@@ -199,6 +199,7 @@ func wrapHTTPFunction(fn func(http.ResponseWriter, *http.Request)) (http.Handler
 			defer fmt.Fprintln(os.Stderr)
 		}
 		defer recoverPanic(w, "user function execution")
+		fmt.Println("I am the framework!")
 		fn(w, r)
 	}), nil
 }
